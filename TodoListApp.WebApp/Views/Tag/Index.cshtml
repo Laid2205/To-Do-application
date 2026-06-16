@@ -1,0 +1,45 @@
+@model IEnumerable<TodoListApp.WebApp.Models.TagWebApiModel>
+
+@{
+	ViewData["Title"] = "Tags";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2 class="fw-bold mb-0">🏷️ All Tags</h2>
+</div>
+
+@if (!Model.Any())
+{
+	<div class="text-center py-5">
+		<div style="font-size: 4rem;">🏷️</div>
+		<h4 class="text-muted mt-3">No tags yet</h4>
+		<p class="text-muted">Add tags to your tasks from the task details page.</p>
+	</div>
+}
+else
+{
+	<div class="card border-0 shadow-sm rounded-4">
+		<div class="card-body p-4">
+			<div class="d-flex flex-wrap gap-2">
+				@foreach (var tag in Model)
+				{
+					<a asp-action="TasksByTag" asp-route-label="@tag.Label"
+					   class="badge bg-primary text-decoration-none fs-6 px-3 py-2 rounded-pill hover-badge">
+						@tag.Label
+					</a>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+<style>
+	.hover-badge {
+		transition: opacity 0.15s ease, transform 0.15s ease;
+	}
+
+		.hover-badge:hover {
+			opacity: 0.85;
+			transform: translateY(-2px);
+		}
+</style>

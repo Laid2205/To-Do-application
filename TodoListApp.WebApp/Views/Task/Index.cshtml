@@ -1,0 +1,182 @@
+@model IEnumerable<TodoListApp.WebApp.Models.TodoTaskWebApiModel>
+
+@{
+    ViewData["Title"] = "Tasks";
+    var todoListId = ViewBag.TodoListId;
+    var searchText = ViewBag.SearchText as string;
+    var category = ViewBag.Category as string;
+    var pageNumber = ViewBag.PageNumber is int currentPage ? currentPage : 1;
+    var pageSize = ViewBag.PageSize is int currentSize ? currentSize : 10;
+    var totalPages = ViewBag.TotalPages is int pages ? pages : 0;
+    var totalCount = ViewBag.TotalCount is int count ? count : 0;
+    var categories = ViewBag.Categories as IEnumerable<string> ?? Enumerable.Empty<string>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Tasks</h2>
+        <div class="text-muted small">@totalCount task(s) found</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" asp-route-todoListId="@todoListId" class="btn btn-primary px-4">
+            + New Task
+        </a>
+        <a asp-controller="TodoList" asp-action="Index" class="btn btn-outline-secondary px-4">
+            Back
+        </a>
+    </div>
+</div>
+
+<form asp-action="Index" method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <input type="hidden" name="todoListId" value="@todoListId" />
+        <input type="hidden" name="pageSize" value="@pageSize" />
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="searchText">Search</label>
+                <input id="searchText"
+                       name="searchText"
+                       value="@searchText"
+                       class="form-control"
+                       placeholder="Search by title or description" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" for="category">Category</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="">All categories</option>
+                    @foreach (var item in categories)
+                    {
+                        <option value="@item" selected="@(string.Equals(category, item, StringComparison.OrdinalIgnoreCase))">
+                            @item
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Apply</button>
+                <a asp-action="Index"
+                   asp-route-todoListId="@todoListId"
+                   class="btn btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <h4 class="text-muted mt-3">No tasks found</h4>
+        <p class="text-muted">Create a new task or change the filters.</p>
+        <a asp-action="Create" asp-route-todoListId="@todoListId" class="btn btn-primary px-4">
+            Create Task
+        </a>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card border-0 shadow-sm @(item.IsOverdue ? "border-start border-danger border-3" : string.Empty)">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    @if (item.IsOverdue)
+                                    {
+                                        <span class="text-danger">Overdue: </span>
+                                    }
+                                    @item.Title
+                                </h5>
+                                <div class="d-flex flex-wrap gap-3 text-muted small">
+                                    <span>
+                                        @switch (item.Status.ToString())
+                                        {
+                                            case "NotStarted":
+                                                <span class="badge bg-secondary">Not Started</span>
+                                                break;
+                                            case "InProgress":
+                                                <span class="badge bg-warning text-dark">In Progress</span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge bg-success">Completed</span>
+                                                break;
+                                        }
+                                    </span>
+                                    @if (item.DueDate.HasValue)
+                                    {
+                                        <span>Due: @item.DueDate.Value.ToString("dd.MM.yyyy")</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Details"
+                                   asp-route-todoListId="@todoListId"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary btn-sm">Details</a>
+                                <a asp-action="Edit"
+                                   asp-route-todoListId="@todoListId"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-secondary btn-sm">Edit</a>
+                                <a asp-action="Delete"
+                                   asp-route-todoListId="@todoListId"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-danger btn-sm">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (totalPages > 1)
+{
+    <nav class="mt-4" aria-label="Task pages">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(pageNumber <= 1 ? "disabled" : string.Empty)">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-todoListId="@todoListId"
+                   asp-route-searchText="@searchText"
+                   asp-route-category="@category"
+                   asp-route-pageNumber="@(pageNumber - 1)"
+                   asp-route-pageSize="@pageSize">Previous</a>
+            </li>
+
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == pageNumber ? "active" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-todoListId="@todoListId"
+                       asp-route-searchText="@searchText"
+                       asp-route-category="@category"
+                       asp-route-pageNumber="@i"
+                       asp-route-pageSize="@pageSize">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(pageNumber >= totalPages ? "disabled" : string.Empty)">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-todoListId="@todoListId"
+                   asp-route-searchText="@searchText"
+                   asp-route-category="@category"
+                   asp-route-pageNumber="@(pageNumber + 1)"
+                   asp-route-pageSize="@pageSize">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<style>
+    .border-3 {
+        border-width: 3px !important;
+    }
+</style>

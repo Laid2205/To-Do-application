@@ -1,0 +1,172 @@
+@model TodoListApp.WebApp.Models.TodoTaskWebApiModel
+
+@{
+	ViewData["Title"] = "Task Details";
+}
+
+<div class="row">
+	<div class="col-lg-8">
+
+		<!-- Task Header -->
+		<div class="card border-0 shadow-sm rounded-4 mb-4">
+			<div class="card-body p-4">
+				<div class="d-flex justify-content-between align-items-start mb-3">
+					<h2 class="fw-bold mb-0">
+						@if (Model.IsOverdue)
+						{
+							<span class="text-danger">⚠️ </span>
+						}
+						@Model.Title
+					</h2>
+					<div class="d-flex gap-2">
+						<a asp-action="Edit"
+						   asp-route-todoListId="@Model.TodoListId"
+						   asp-route-id="@Model.Id"
+						   class="btn btn-outline-secondary btn-sm">✏️ Edit</a>
+						<a asp-action="Index"
+						   asp-route-todoListId="@Model.TodoListId"
+						   class="btn btn-outline-primary btn-sm">← Back</a>
+					</div>
+				</div>
+
+				<p class="text-muted mb-4">
+					@(string.IsNullOrEmpty(Model.Description) ? "No description" : Model.Description)
+				</p>
+
+				<div class="row g-3">
+					<div class="col-sm-4">
+						<div class="bg-light rounded-3 p-3 text-center">
+							<div class="small text-muted mb-1">Status</div>
+							@switch (Model.Status.ToString())
+							{
+								case "NotStarted":
+									<span class="badge bg-secondary fs-6">Not Started</span>
+									break;
+								case "InProgress":
+									<span class="badge bg-warning text-dark fs-6">In Progress</span>
+									break;
+								case "Completed":
+									<span class="badge bg-success fs-6">Completed</span>
+									break;
+							}
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="bg-light rounded-3 p-3 text-center">
+							<div class="small text-muted mb-1">Created</div>
+							<div class="fw-semibold">@Model.CreatedAt.ToString("dd.MM.yyyy")</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="bg-light rounded-3 p-3 text-center">
+							<div class="small text-muted mb-1">Due Date</div>
+							<div class="fw-semibold @(Model.IsOverdue ? "text-danger" : string.Empty)">
+								@(Model.DueDate.HasValue? Model.DueDate.Value.ToString("dd.MM.yyyy") : "—")
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Tags -->
+		<div class="card border-0 shadow-sm rounded-4 mb-4">
+			<div class="card-body p-4">
+				<h5 class="fw-bold mb-3">🏷️ Tags</h5>
+				@if (Model.Tags != null && Model.Tags.Any())
+				{
+					<div class="d-flex flex-wrap gap-2 mb-3">
+						@foreach (var tag in Model.Tags)
+						{
+							<span class="badge bg-primary fs-6 d-flex align-items-center gap-1">
+								@tag.Label
+								<form asp-controller="Tag" asp-action="RemoveTag"
+									  method="post" class="d-inline m-0 p-0">
+									<input type="hidden" name="taskId" value="@Model.Id" />
+									<input type="hidden" name="todoListId" value="@Model.TodoListId" />
+									<input type="hidden" name="tagId" value="@tag.Id" />
+									<button type="submit"
+											class="btn-close btn-close-white"
+											style="font-size: 0.6rem;"></button>
+								</form>
+							</span>
+						}
+					</div>
+				}
+				else
+				{
+					<p class="text-muted small mb-3">No tags yet.</p>
+				}
+
+				<form asp-controller="Tag" asp-action="AddTag" method="post"
+					  class="d-flex gap-2">
+					<input type="hidden" name="taskId" value="@Model.Id" />
+					<input type="hidden" name="todoListId" value="@Model.TodoListId" />
+					<input type="text" name="label" class="form-control form-control-sm"
+						   placeholder="Add tag..." />
+					<button type="submit" class="btn btn-outline-primary btn-sm px-3">
+						Add
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- Comments -->
+		<div class="card border-0 shadow-sm rounded-4">
+			<div class="card-body p-4">
+				<h5 class="fw-bold mb-3">💬 Comments</h5>
+
+				@if (Model.Comments != null && Model.Comments.Any())
+				{
+					<div class="d-flex flex-column gap-3 mb-4">
+						@foreach (var comment in Model.Comments)
+						{
+							<div class="bg-light rounded-3 p-3">
+								<p class="mb-1">@comment.Text</p>
+								<div class="d-flex justify-content-between align-items-center">
+									<small class="text-muted">
+										@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+									</small>
+									<div class="d-flex gap-2">
+										<a asp-controller="Comment" asp-action="Edit"
+										   asp-route-taskId="@Model.Id"
+										   asp-route-todoListId="@Model.TodoListId"
+										   asp-route-commentId="@comment.Id"
+										   class="btn btn-outline-secondary btn-sm">✏️</a>
+										<form asp-controller="Comment" asp-action="Delete"
+											  method="post" class="d-inline">
+											<input type="hidden" name="taskId" value="@Model.Id" />
+											<input type="hidden" name="todoListId" value="@Model.TodoListId" />
+											<input type="hidden" name="commentId" value="@comment.Id" />
+											<button type="submit"
+													class="btn btn-outline-danger btn-sm">
+												🗑️
+											</button>
+										</form>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				}
+				else
+				{
+					<p class="text-muted small mb-3">No comments yet.</p>
+				}
+
+				<form asp-controller="Comment" asp-action="Create" method="post">
+					<input type="hidden" name="taskId" value="@Model.Id" />
+					<input type="hidden" name="todoListId" value="@Model.TodoListId" />
+					<div class="mb-2">
+						<textarea name="text" class="form-control" rows="2"
+								  placeholder="Write a comment..."></textarea>
+					</div>
+					<button type="submit" class="btn btn-outline-primary btn-sm px-4">
+						Add Comment
+					</button>
+				</form>
+			</div>
+		</div>
+
+	</div>
+</div>

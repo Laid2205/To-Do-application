@@ -1,0 +1,127 @@
+<main class="app-shell">
+  <section class="sidebar">
+    <div>
+      <p class="text-uppercase text-secondary small fw-semibold mb-1">Microsoft To-Do style</p>
+      <h1 class="h3 fw-bold mb-4">To-Do</h1>
+    </div>
+
+    <div class="login-panel">
+      <div class="text-secondary small">Signed in as</div>
+      <div class="fw-semibold text-truncate mb-3">{{ currentUser }}</div>
+      <button class="btn btn-outline-secondary w-100" type="button" (click)="logout()">Log out</button>
+    </div>
+
+    <div class="mt-4">
+      <label class="form-label fw-semibold" for="list">List</label>
+      <select id="list" class="form-select" [(ngModel)]="selectedListId" name="selectedListId" (change)="changeList()">
+        <option *ngFor="let list of lists" [ngValue]="list.id">{{ list.title }}</option>
+      </select>
+      <button *ngIf="lists.length === 0" class="btn btn-outline-primary w-100 mt-3" type="button" (click)="createDefaultList()">
+        Create default list
+      </button>
+    </div>
+
+    <div class="mt-4">
+      <label class="form-label fw-semibold" for="newCategory">New category</label>
+      <div class="input-group">
+        <input id="newCategory" name="newCategory" [(ngModel)]="newCategoryName" class="form-control" placeholder="Work">
+        <button class="btn btn-outline-primary" type="button" (click)="addCategory()">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="content-header">
+      <div>
+        <h2 class="h4 fw-bold mb-1">Tasks</h2>
+        <div class="text-secondary">{{ totalCount }} task(s)</div>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+    <form class="toolbar" (ngSubmit)="applyFilters()">
+      <input name="searchText" [(ngModel)]="searchText" class="form-control" placeholder="Search tasks">
+      <select name="selectedCategory" [(ngModel)]="selectedCategory" class="form-select">
+        <option value="">All categories</option>
+        <option *ngFor="let category of categories" [value]="category.name">{{ category.name }}</option>
+      </select>
+      <button class="btn btn-primary" type="submit">Apply</button>
+      <button class="btn btn-outline-secondary" type="button" (click)="resetFilters()">Reset</button>
+    </form>
+
+    <form class="task-form" (ngSubmit)="saveTask()">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <label class="form-label fw-semibold" for="title">Title</label>
+          <input id="title" name="title" [(ngModel)]="taskForm.title" class="form-control" required>
+        </div>
+        <div class="col-lg-4">
+          <label class="form-label fw-semibold" for="description">Description</label>
+          <input id="description" name="description" [(ngModel)]="taskForm.description" class="form-control">
+        </div>
+        <div class="col-lg-2">
+          <label class="form-label fw-semibold" for="dueDate">Due date</label>
+          <input id="dueDate" name="dueDate" [(ngModel)]="taskForm.dueDate" type="date" class="form-control">
+        </div>
+        <div class="col-lg-2">
+          <label class="form-label fw-semibold" for="status">Status</label>
+          <select id="status" name="status" [(ngModel)]="taskForm.status" class="form-select">
+            <option [ngValue]="0">Not Started</option>
+            <option [ngValue]="1">In Progress</option>
+            <option [ngValue]="2">Completed</option>
+          </select>
+        </div>
+        <div class="col-lg-4">
+          <label class="form-label fw-semibold" for="categoryId">Category</label>
+          <select id="categoryId" name="categoryId" [(ngModel)]="taskForm.categoryId" class="form-select">
+            <option [ngValue]="null">No category</option>
+            <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
+          </select>
+        </div>
+        <div class="col-lg-8 form-actions">
+          <button class="btn btn-success" type="submit">{{ taskForm.id ? 'Save changes' : 'Create task' }}</button>
+          <button *ngIf="taskForm.id" class="btn btn-outline-secondary" type="button" (click)="resetTaskForm()">Cancel</button>
+        </div>
+      </div>
+    </form>
+
+    <div *ngIf="isLoading" class="text-secondary py-4">Loading tasks...</div>
+
+    <div *ngIf="!isLoading && tasks.length === 0" class="empty-state">
+      No tasks found. Create one or change filters.
+    </div>
+
+    <div class="task-list" *ngIf="!isLoading && tasks.length > 0">
+      <article class="task-card" *ngFor="let task of tasks">
+        <div>
+          <h3 class="h6 fw-bold mb-1">{{ task.title }}</h3>
+          <p class="text-secondary mb-2">{{ task.description || 'No description' }}</p>
+          <span class="badge" [class.bg-secondary]="task.status === 0" [class.bg-warning]="task.status === 1" [class.bg-success]="task.status === 2">
+            {{ statusLabel(task.status) }}
+          </span>
+          <span *ngIf="task.categoryName" class="badge bg-info text-dark ms-2">{{ task.categoryName }}</span>
+          <span *ngIf="task.dueDate" class="text-secondary small ms-2">Due {{ task.dueDate | date }}</span>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-outline-primary btn-sm" type="button" (click)="editTask(task)">Edit</button>
+          <button class="btn btn-outline-danger btn-sm" type="button" (click)="deleteTask(task)">Delete</button>
+        </div>
+      </article>
+    </div>
+
+    <nav *ngIf="totalPages > 1" class="mt-4" aria-label="Task pagination">
+      <ul class="pagination mb-0">
+        <li class="page-item" [class.disabled]="pageNumber <= 1">
+          <button class="page-link" type="button" (click)="goToPage(pageNumber - 1)">Previous</button>
+        </li>
+        <li class="page-item" *ngFor="let page of pageNumbers()" [class.active]="page === pageNumber">
+          <button class="page-link" type="button" (click)="goToPage(page)">{{ page }}</button>
+        </li>
+        <li class="page-item" [class.disabled]="pageNumber >= totalPages">
+          <button class="page-link" type="button" (click)="goToPage(pageNumber + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
+  </section>
+</main>

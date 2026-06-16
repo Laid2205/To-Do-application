@@ -1,0 +1,114 @@
+@model IEnumerable<TodoListApp.WebApp.Models.AssignedTaskWebApiModel>
+
+@{
+	ViewData["Title"] = "My Tasks";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h2 class="fw-bold mb-0">📌 My Tasks</h2>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+	<div class="card-body p-4">
+		<form method="get" class="row g-3 align-items-end">
+			<div class="col-md-4">
+				<label class="form-label fw-semibold small d-block">
+					Filter by Status
+					<select name="statusFilter" class="form-select rounded-3">
+						<option value="">All</option>
+						<option value="NotStarted">Not Started</option>
+						<option value="InProgress">In Progress</option>
+						<option value="Completed">Completed</option>
+					</select>
+				</label>
+			</div>
+			<div class="col-md-4">
+				<label class="form-label fw-semibold small d-block">
+					Sort by
+					<select name="sortBy" class="form-select rounded-3">
+						<option value="">Default</option>
+						<option value="duedate">Due Date</option>
+						<option value="status">Status</option>
+						<option value="title">Title</option>
+					</select>
+				</label>
+			</div>
+			<div class="col-md-4">
+				<button type="submit" class="btn btn-primary w-100 rounded-3">
+					Apply
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+@if (!Model.Any())
+{
+	<div class="text-center py-5">
+		<div style="font-size: 4rem;">🎉</div>
+		<h4 class="text-muted mt-3">No tasks assigned to you</h4>
+	</div>
+}
+else
+{
+	<div class="row row-cols-1 g-3">
+		@foreach (var item in Model)
+		{
+			<div class="col">
+				<div class="card border-0 shadow-sm rounded-4">
+					<div class="card-body p-4">
+						<div class="d-flex justify-content-between align-items-start">
+							<div>
+								<h5 class="fw-bold mb-1">@item.Title</h5>
+								<p class="text-muted small mb-2">
+									@(string.IsNullOrEmpty(item.Description) ? "No description" : item.Description)
+								</p>
+								<div class="d-flex gap-3 align-items-center">
+									@switch (item.Status.ToString())
+									{
+										case "NotStarted":
+											<span class="badge bg-secondary">Not Started</span>
+											break;
+										case "InProgress":
+											<span class="badge bg-warning text-dark">In Progress</span>
+											break;
+										case "Completed":
+											<span class="badge bg-success">Completed</span>
+											break;
+									}
+									@if (item.DueDate.HasValue)
+									{
+										<span class="text-muted small">📅 @item.DueDate.Value.ToString("dd.MM.yyyy")</span>
+									}
+								</div>
+							</div>
+							<div>
+								<form method="post" asp-controller="AssignedTask" asp-action="UpdateStatus">
+									<input type="hidden" name="taskId" value="@item.Id" />
+									<select name="newStatus" class="form-select form-select-sm rounded-3"
+											onchange="this.form.submit()">
+										@{
+											var statuses = new[] { "NotStarted", "InProgress", "Completed" };
+											var labels = new[] { "Not Started", "In Progress", "Completed" };
+											for (int i = 0; i < statuses.Length; i++)
+											{
+												if (item.Status.ToString() == statuses[i])
+												{
+													<option value="@statuses[i]" selected>@labels[i]</option>
+												}
+												else
+												{
+													<option value="@statuses[i]">@labels[i]</option>
+												}
+											}
+										}
+									</select>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}

@@ -1,0 +1,102 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+.sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 28px;
+}
+
+.login-panel,
+.task-form,
+.toolbar,
+.task-card,
+.empty-state {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.login-panel {
+  padding: 18px;
+}
+
+.content {
+  padding: 32px;
+}
+
+.content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px) auto auto;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.task-form {
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.task-list {
+  display: grid;
+  gap: 12px;
+}
+
+.task-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .task-card {
+    flex-direction: column;
+  }
+}
